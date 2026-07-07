@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Roblox GUI Studio</title>
+<style>
+  * { box-sizing: border-box; }
+  :root{ --bg:#0c0d11; --panel:#15161c; --panel-2:#1b1d25; --line:#262833; --line-soft:#20222b; --txt:#dcdce4; --txt-dim:#8b8d99; --txt-faint:#61636f; --accent:#8b7fe0; --accent-2:#6f62d8; --accent-soft:#2a2740; --blue:#7fa8d8; --gold:#d3a86a; --green:#cfe3cf; }
+  body{ margin:0; padding:16px; background:#000; color:var(--txt); font-family:'Inter','Segoe UI',system-ui,sans-serif; }
+  .gui-app{ background:var(--bg); padding:16px; border-radius:14px; display:flex; flex-direction:column; height:calc(100vh - 32px); min-height:620px; }
+  .hdr{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:12px; flex-wrap:wrap; flex-shrink:0; }
+  .hdr .title{ display:flex; align-items:center; gap:10px; }
+  .hdr .logo{ width:30px; height:30px; border-radius:8px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex; align-items:center; justify-content:center; font-size:16px; box-shadow:0 4px 14px rgba(124,98,216,.4); }
+  .hdr h1{ margin:0; font-size:16px; font-weight:700; }
+  .hdr .sub{ font-size:11.5px; color:var(--txt-faint); margin-top:1px; }
+  .hdr-actions{ display:flex; gap:8px; align-items:center; }
+  .btn{ font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:8px; cursor:pointer; border:1px solid var(--line); background:var(--panel-2); color:var(--txt); transition:all .12s; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .btn:hover{ background:#23252f; border-color:#33353f; }
+  .btn:disabled{ opacity:.38; cursor:default; }
+  .btn.icon{ padding:8px 11px; font-size:15px; line-height:1; }
+  .btn.primary{ background:linear-gradient(135deg,var(--accent),var(--accent-2)); border:none; color:#fff; box-shadow:0 3px 12px rgba(124,98,216,.35); }
+  .btn.primary:hover{ filter:brightness(1.08); }
+  .cols{ display:flex; gap:12px; flex:1; min-height:0; align-items:stretch; }
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; display:flex; flex-direction:column; min-height:0; }
+  .col-tree{ flex:1.2 1 240px; min-width:220px; }
+  .col-preview{ flex:2.4 1 420px; min-width:340px; }
+  .col-inspect{ flex:1.5 1 300px; min-width:280px; }
+  .scroll-area{ overflow-y:auto; flex:1; min-height:0; padding-right:4px; }
+  .scroll-area::-webkit-scrollbar{ width:6px; } .scroll-area::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  .lbl{ display:flex; align-items:center; gap:7px; font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--txt-dim); margin:0 0 12px; font-weight:600; flex-shrink:0; }
+  .lbl::before{ content:''; width:3px; height:12px; border-radius:2px; background:var(--accent); }
+  .lbl-row{ justify-content:space-between; }
+  .mode-seg{ display:flex; gap:3px; background:var(--panel-2); padding:3px; border-radius:7px; }
+  .mode-seg button{ font-size:10.5px; font-weight:700; padding:4px 11px; border:none; background:transparent; color:var(--txt-dim); border-radius:5px; cursor:pointer; }
+  .mode-seg button.on{ background:var(--accent); color:#fff; }
+  .mode-seg button.ai.on{ background:var(--gold); color:#111; }
+  .bg-select{ font-size:10.5px; font-weight:700; padding:5px 9px; border-radius:7px; border:1px solid var(--line); background:var(--panel-2); color:var(--txt-dim); cursor:pointer; }
+  .bg-select:hover{ color:var(--txt); border-color:#33353f; }
+  .bg-select:focus{ outline:none; border-color:var(--accent); }
+
+  .tree-node{ font-size:12.5px; cursor:pointer; padding:3px 4px; border-radius:6px; white-space:nowrap; display:flex; align-items:center; gap:5px; }
+  .tree-node:hover{ background:var(--panel-2); }
+  .tree-node.sel{ background:var(--accent-soft); box-shadow:inset 0 0 0 1px rgba(139,127,224,.4); }
+  .chev{ font-size:9px; width:12px; text-align:center; color:var(--txt-faint); transition:transform .12s; cursor:pointer; flex:0 0 auto; }
+  .chev.open{ transform:rotate(90deg); } .chev.empty{ visibility:hidden; }
+  .tree-node .dot{ width:6px; height:6px; border-radius:2px; background:var(--blue); flex:0 0 auto; }
+  .tree-mod .dot{ background:var(--gold); border-radius:50%; }
+  .tree-node .cls{ color:var(--blue); font-weight:600; }
+  .tree-mod .cls{ color:var(--gold); }
+  .tree-node .nm{ color:var(--txt-dim); overflow:hidden; text-overflow:ellipsis; flex:1; }
+  .tree-node .eye{ background:none; border:none; cursor:pointer; opacity:.85; padding:0 2px; color:var(--txt); display:flex; align-items:center; }
+  .tree-node .eye:hover{ opacity:1; color:var(--accent); } .tree-node .eye.off{ opacity:.3; }
+  .tree-children{ margin-left:9px; border-left:1px solid var(--line-soft); padding-left:5px; }
+  .tree-children.collapsed{ display:none; }
+  .subpanel{ margin-top:12px; border-top:1px solid var(--line); padding-top:10px; flex-shrink:0; }
+  .state-list{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .state-pill{ font-size:11px; padding:4px 9px; background:var(--panel-2); border:1px solid var(--line); border-radius:12px; cursor:pointer; color:var(--txt-dim); position:relative; }
+  .state-pill:hover{ border-color:var(--accent); color:var(--txt); }
+  .state-pill .del-state{ position:absolute; right:-5px; top:-5px; background:#d98b8b; color:#000; border-radius:50%; width:13px; height:13px; display:none; align-items:center; justify-content:center; font-size:8px; font-weight:bold; }
+  .state-pill:hover .del-state{ display:flex; }
+  .empty-hint{ font-size:11px; color:var(--txt-faint); margin-top:8px; }
+  .tree-actions{ display:grid; grid-template-columns:1fr 1fr; gap:6px; flex-shrink:0; margin-top:12px; border-top:1px solid var(--line); padding-top:10px; }
+  .tree-actions button{ font-size:11px; padding:6px; border:1px solid var(--line); background:var(--panel-2); color:var(--txt-dim); border-radius:6px; cursor:pointer; font-weight:600; }
+  .tree-actions button:hover{ background:#23252f; color:var(--txt); }
+  .tree-actions .wide{ grid-column:1 / -1; } .tree-actions .del{ color:#d98b8b; border-color:#3a2a2a; }
+
+  .screen{ position:relative; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,#8fc3e8 0%,#b7dcf0 42%,#6fa14e 42%,#4c7d38 100%); box-shadow:0 8px 30px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06); flex-shrink:0; }
+  .screen::after{ content:''; position:absolute; inset:0; pointer-events:none; background:radial-gradient(circle at 72% 22%, rgba(255,255,255,.26), transparent 46%); }
+  .screen[data-bg="sunset"]{ background:linear-gradient(180deg,#ffb37a 0%,#ff8f9c 36%,#8a5f8f 68%,#2c2440 100%); }
+  .screen[data-bg="night"]{ background:radial-gradient(1.5px 1.5px at 15% 20%, rgba(255,255,255,.8), transparent), radial-gradient(1.5px 1.5px at 40% 12%, rgba(255,255,255,.6), transparent), radial-gradient(1.5px 1.5px at 65% 28%, rgba(255,255,255,.7), transparent), radial-gradient(1.5px 1.5px at 85% 10%, rgba(255,255,255,.5), transparent), radial-gradient(1.5px 1.5px at 25% 40%, rgba(255,255,255,.5), transparent), linear-gradient(180deg,#0a0e1c 0%,#131a30 55%,#0d1220 100%); }
+  .screen[data-bg="light"]{ background:#eef0f3; }
+  .screen[data-bg="dark"]{ background:#0c0d11; }
+  .screen[data-bg="mid"]{ background:#888c96; }
+  .screen[data-bg="grid"]{ background-color:#1b1d25; background-image:linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px); background-size:24px 24px; }
+  .screen[data-bg="light"]::after, .screen[data-bg="dark"]::after, .screen[data-bg="mid"]::after, .screen[data-bg="grid"]::after, .screen[data-bg="night"]::after{ background:none; }
+  .r-el{ position:absolute; overflow:hidden; }
+  .r-el.selected-outline{ outline:2px dashed var(--gold); outline-offset:-1px; z-index:9999 !important; }
+  .r-el.ghost{ opacity:.4; outline:1px dashed rgba(255,255,255,.4); outline-offset:-1px; }
+  .screen.mode-preview .r-el.is-button{ cursor:pointer; }
+  .screen.mode-preview .r-el.is-button:hover{ filter:brightness(1.14); }
+  .screen.mode-preview .r-el.is-button:active{ filter:brightness(.86) saturate(1.1); transform:scale(.99); }
+  .r-input{ background:transparent; border:none; color:inherit; width:100%; height:100%; outline:none; font-family:inherit; font-size:inherit; font-weight:inherit; text-align:inherit; padding:0; }
+  .r-input::placeholder{ color:inherit; opacity:.65; }
+  .screen iframe{ width:100%; height:100%; border:none; }
+  .ai-splash{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--gold); font-size:13px; text-align:center; padding:20px; }
+  .spinner{ width:26px; height:26px; border:3px solid rgba(211,168,106,.25); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; } @keyframes spin{ to{ transform:rotate(360deg); } }
+  .prev-note{ font-size:11px; color:var(--txt-faint); margin-top:10px; line-height:1.5; flex-shrink:0; }
+
+  .insp-cat{ font-size:10px; font-weight:700; color:var(--txt-faint); text-transform:uppercase; letter-spacing:.05em; padding:5px 8px; background:var(--panel-2); margin:10px 0 6px; border-radius:4px; }
+  .insp-empty{ font-size:12.5px; color:var(--txt-faint); padding:6px 0; }
+  .prop{ margin:6px 0; } .prop > label{ display:block; font-size:11px; color:var(--txt-dim); margin-bottom:4px; font-weight:500; }
+  .prop input[type=text], .prop input[type=number]{ background:#0d0e12; border:1px solid var(--line); color:var(--txt); border-radius:6px; padding:5px 8px; font-size:12px; width:100%; }
+  .prop input:focus{ outline:none; border-color:var(--accent); }
+  .prop .quad{ display:grid; grid-template-columns:repeat(4,1fr); gap:5px; } .prop .duo{ display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .prop .quad input, .prop .duo input{ padding:4px; font-size:11px; text-align:center; }
+  .prop .mini{ font-size:8.5px; color:var(--txt-faint); text-align:center; margin-top:2px; }
+  .prop input[type=color]{ width:46px; height:28px; border:1px solid var(--line); border-radius:6px; background:none; padding:2px; cursor:pointer; }
+  .prop.inline{ display:flex; align-items:center; justify-content:space-between; } .prop.inline > label{ margin:0; }
+  .prop input[type=checkbox]{ width:16px; height:16px; accent-color:var(--accent); }
+  .seg{ display:flex; gap:4px; background:var(--panel-2); padding:3px; border-radius:8px; margin:14px 0 8px; flex-shrink:0; }
+  .seg button{ flex:1; font-size:11px; padding:6px; border:none; background:transparent; color:var(--txt-dim); border-radius:6px; cursor:pointer; font-weight:600; }
+  .seg button.on{ background:var(--accent); color:#fff; }
+  pre.out{ background:#08090c; border:1px solid var(--line); border-radius:8px; padding:10px; margin:0 0 8px; font-family:ui-monospace,Consolas,monospace; font-size:10.5px; line-height:1.5; color:var(--green); white-space:pre; overflow:auto; max-height:180px; flex-shrink:0; }
+  .copy-btn{ width:100%; padding:8px; border:none; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; font-size:12px; cursor:pointer; flex-shrink:0; }
+  .copy-btn:hover{ background:var(--accent-2); }
+
+  .overlay{ position:fixed; inset:0; background:rgba(6,7,10,.72); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:1000; padding:20px; }
+  .overlay.show{ display:flex; }
+  .modal{ background:var(--panel); border:1px solid var(--line); border-radius:16px; width:100%; max-width:620px; padding:22px; box-shadow:0 24px 70px rgba(0,0,0,.6); }
+  .modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .modal-head h2{ margin:0; font-size:16px; display:flex; align-items:center; gap:10px; }
+  .modal-head .x{ background:none; border:none; color:var(--txt-dim); font-size:20px; cursor:pointer; }
+  .fmt-badge{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; background:var(--panel-2); color:var(--txt-dim); }
+  .modal textarea{ width:100%; height:200px; background:#08090c; border:1px solid var(--line); border-radius:10px; color:var(--txt); padding:12px; font-family:ui-monospace,monospace; font-size:11.5px; resize:vertical; margin-top:10px; }
+  .modal textarea:focus{ outline:none; border-color:var(--accent); }
+  .import-status{ font-size:12px; margin:10px 0; min-height:18px; } .import-status.err{ color:#e08b8b; } .import-status.ok{ color:#7fd8a0; }
+</style></head><body>
+
+<div class="gui-app">
+  <div class="hdr">
+    <div class="title"><div class="logo">◧</div><div><h1>Roblox GUI Studio</h1><div class="sub">Explorer · Properties · Interactive Preview · States · AI Live</div></div></div>
+    <div class="hdr-actions">
+      <button class="btn icon" id="undoBtn" title="Undo (Ctrl+Z)">↺</button>
+      <button class="btn icon" id="redoBtn" title="Redo (Ctrl+Y)">↻</button>
+      <button class="btn" id="resetBtn">Reset</button>
+      <button class="btn primary" id="openImport">↥ Import</button>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="card col-tree">
+      <div class="lbl">Explorer</div>
+      <div class="scroll-area" id="treeView"></div>
+      <div class="subpanel">
+        <div class="lbl lbl-row" style="margin:0;">State Manager <button class="btn icon" style="padding:1px 7px; font-size:14px;" id="addStateBtn" title="Save current layout as a state">+</button></div>
+        <div class="state-list" id="stateList"></div>
+        <div class="empty-hint" id="stateHint">Toggle Visible / tweak props, then + to snapshot a state (e.g. "Dropdown Open"). Click a pill to jump to it.</div>
+      </div>
+      <div class="tree-actions">
+        <button data-add="Frame">+ Frame</button><button data-add="TextLabel">+ Label</button>
+        <button data-add="TextButton">+ Button</button><button data-add="TextBox">+ Input</button>
+        <button class="wide" id="dupBtn">⧉ Duplicate (Ctrl+D)</button>
+        <button class="wide del" id="delBtn">Delete selected</button>
+      </div>
+    </div>
+
+    <div class="card col-preview">
+      <div class="lbl lbl-row">Live preview
+        <div style="display:flex; gap:8px; align-items:center;">
+          <select class="bg-select" id="bgSelect" title="Backdrop"></select>
+          <div class="mode-seg">
+            <button id="modeEdit" class="on">Edit</button>
+            <button id="modePreview">Preview</button>
+            <button id="modeAI" class="ai">✨ AI Live</button>
+          </div>
+        </div>
+      </div>
+      <div class="screen" id="screen"></div>
+      <div class="prev-note" id="prevNote"></div>
+    </div>
+
+    <div class="card col-inspect">
+      <div class="lbl">Properties</div>
+      <div class="scroll-area" id="inspector"><div class="insp-empty">Select an element</div></div>
+      <div class="seg"><button id="tabLuau" class="on">Luau</button><button id="tabDict">Dict</button><button id="tabJson">JSON</button></div>
+      <pre class="out" id="exportOut"></pre>
+      <button class="copy-btn" id="copyBtn">Copy code</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-head"><h2>Import a GUI <span class="fmt-badge" id="fmtBadge">Detecting…</span></h2><button class="x" id="closeImport">×</button></div>
+    <div style="display:flex; gap:8px;">
+      <button class="btn" id="browseFileBtn" style="flex:1; border-color:var(--accent);">Browse file (.rbxmx / .json / .lua)</button>
+      <input type="file" id="fileInp" style="display:none" accept=".rbxmx,.xml,.json,.txt,.lua,.luau">
+    </div>
+    <textarea id="importText" placeholder="…or paste a Luau script, .rbxmx XML, or clean JSON dump here"></textarea>
+    <div class="import-status" id="importStatus"></div>
+    <button class="btn primary" id="loadBtn" style="width:100%">Load into editor</button>
+  </div>
+</div>
+
+<script>
+const C3=(r,g,b)=>({t:'Color3',r,g,b}), U2=(xs,xo,ys,yo)=>({t:'UDim2',xs,xo,ys,yo}), UD=(s,o)=>({t:'UDim',s,o}), V2=(x,y)=>({t:'Vector2',x,y}), EN=(e,v)=>({t:'Enum',enum:e,value:v});
+const MODS=['UICorner','UIStroke','UIListLayout','UIGridLayout','UIPadding','UIGradient','UISizeConstraint','UIAspectRatioConstraint'];
+const TEXTY=['TextLabel','TextButton','TextBox'], IMGY=['ImageLabel','ImageButton'], BTNY=['TextButton','ImageButton'];
+const isMod=n=>MODS.includes(n.class), GUIOBJ=c=>!MODS.includes(c);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const deepEq=(a,b)=>{ if(a===b) return true; if(typeof a!=='object'||typeof b!=='object'||!a||!b) return false; const ka=Object.keys(a),kb=Object.keys(b); if(ka.length!==kb.length) return false; return ka.every(k=>deepEq(a[k],b[k])); };
+const hexToRgb=h=>{ const x=parseInt(h.slice(1),16); return [(x>>16)&255,(x>>8)&255,x&255]; };
+const rgbToHex=(r,g,b)=>'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+
+/* ---------- COMPREHENSIVE PROPERTY SCHEMA (Studio-like) ---------- */
+const TEXT_CAT=()=>({ Text:['string','Label'], TextColor3:['Color3',C3(27,42,53)], TextTransparency:['number',0], TextSize:['number',14], Font:['Enum',EN('Font','GothamMedium')], TextScaled:['bool',false], TextWrapped:['bool',false], RichText:['bool',false], TextXAlignment:['Enum',EN('TextXAlignment','Center')], TextYAlignment:['Enum',EN('TextYAlignment','Center')] });
+const baseCats=()=>({
+  Data:{ Name:['string',''] },
+  Appearance:{ BackgroundColor3:['Color3',C3(255,255,255)], BackgroundTransparency:['number',0], BorderSizePixel:['number',1], BorderColor3:['Color3',C3(27,42,53)], Visible:['bool',true], ZIndex:['number',1] },
+  Layout:{ Size:['UDim2',U2(0,100,0,100)], Position:['UDim2',U2(0,0,0,0)], AnchorPoint:['Vector2',V2(0,0)], Rotation:['number',0] },
+  Behavior:{ Active:['bool',false], ClipsDescendants:['bool',false] }
+});
+function schemaFor(cls){
+  if(cls==='ScreenGui') return { Data:{Name:['string','']}, Behavior:{ Enabled:['bool',true], ResetOnSpawn:['bool',true], IgnoreGuiInset:['bool',false], DisplayOrder:['number',0] } };
+  if(cls==='UICorner') return { Appearance:{ CornerRadius:['UDim',UD(0,8)] } };
+  if(cls==='UIStroke') return { Appearance:{ Color:['Color3',C3(0,0,0)], Thickness:['number',1], Transparency:['number',0] } };
+  if(cls==='UIListLayout') return { Layout:{ Padding:['UDim',UD(0,0)], FillDirection:['Enum',EN('FillDirection','Vertical')], HorizontalAlignment:['Enum',EN('HorizontalAlignment','Left')], VerticalAlignment:['Enum',EN('VerticalAlignment','Top')], SortOrder:['Enum',EN('SortOrder','LayoutOrder')] } };
+  if(cls==='UIPadding') return { Layout:{ PaddingLeft:['UDim',UD(0,0)], PaddingRight:['UDim',UD(0,0)], PaddingTop:['UDim',UD(0,0)], PaddingBottom:['UDim',UD(0,0)] } };
+  if(cls==='UIGradient') return { Appearance:{ Rotation:['number',0], Transparency:['number',0] } };
+  if(MODS.includes(cls)) return { Data:{Name:['string','']} };
+  const s=baseCats();
+  if(TEXTY.includes(cls)) s.Text=TEXT_CAT();
+  if(cls==='TextBox'){ s.Text.PlaceholderText=['string','']; s.Text.PlaceholderColor3=['Color3',C3(178,178,178)]; s.Behavior.ClearTextOnFocus=['bool',true]; s.Behavior.TextEditable=['bool',true]; }
+  if(IMGY.includes(cls)){ s.Data.Image=['string','']; s.Appearance.ImageColor3=['Color3',C3(255,255,255)]; s.Appearance.ImageTransparency=['number',0]; s.Appearance.ScaleType=['Enum',EN('ScaleType','Stretch')]; }
+  if(cls==='ScrollingFrame'){ s.Appearance.ScrollBarThickness=['number',12]; s.Layout.CanvasSize=['UDim2',U2(0,0,0,0)]; s.Behavior.ScrollingDirection=['Enum',EN('ScrollingDirection','XY')]; }
+  return s;
+}
+const CAT_ORDER=['Data','Appearance','Text','Layout','Behavior'];
+function flatSchema(cls){ const s=schemaFor(cls), f={}; Object.values(s).forEach(cat=>Object.entries(cat).forEach(([k,[t,d]])=>{ if(k!=='Name') f[k]=d; })); return f; }
+const gp=(node,key,def)=>{ const v=node.props?.[key]; return v===undefined?def:v; };
+
+/* ---------- STATE ---------- */
+let uid=0, selected=null, selectedId=null, exportMode='luau', mode='edit', tree, customStates={};
+const seedTree=()=>({ class:'ScreenGui', name:'MainUI', props:{}, children:[
+  { class:'Frame', name:'Window', props:{ Size:U2(0,320,0,210), Position:U2(0,40,0,40), BackgroundColor3:C3(24,25,33) }, children:[
+    { class:'UICorner', name:'UICorner', props:{ CornerRadius:UD(0,12) }, children:[] },
+    { class:'TextLabel', name:'Title', props:{ Size:U2(1,-32,0,30), Position:U2(0,16,0,14), BackgroundTransparency:1, Text:'Menu', TextColor3:C3(240,240,245), TextSize:18, Font:EN('Font','GothamBold'), TextXAlignment:EN('TextXAlignment','Left') }, children:[] },
+    { class:'TextButton', name:'OpenBtn', props:{ Size:U2(0,120,0,34), Position:U2(0,16,0,56), BackgroundColor3:C3(124,111,224), Text:'Options ▾', TextColor3:C3(255,255,255), TextSize:14, Font:EN('Font','GothamBold') }, children:[ { class:'UICorner', name:'UICorner', props:{ CornerRadius:UD(0,8) }, children:[] } ] },
+    { class:'Frame', name:'Dropdown', props:{ Size:U2(0,120,0,96), Position:U2(0,16,0,94), BackgroundColor3:C3(34,35,44), Visible:false }, children:[
+      { class:'UICorner', name:'UICorner', props:{ CornerRadius:UD(0,8) }, children:[] },
+      { class:'UIListLayout', name:'UIListLayout', props:{ Padding:UD(0,4) }, children:[] },
+      { class:'TextButton', name:'Opt1', props:{ Size:U2(1,0,0,28), BackgroundColor3:C3(48,49,60), Text:'Whisper', TextColor3:C3(230,230,235), TextSize:13 }, children:[] },
+      { class:'TextButton', name:'Opt2', props:{ Size:U2(1,0,0,28), BackgroundColor3:C3(48,49,60), Text:'Normal', TextColor3:C3(230,230,235), TextSize:13 }, children:[] },
+      { class:'TextButton', name:'Opt3', props:{ Size:U2(1,0,0,28), BackgroundColor3:C3(48,49,60), Text:'Shout', TextColor3:C3(230,230,235), TextSize:13 }, children:[] }
+    ]},
+    { class:'TextBox', name:'Input', props:{ Size:U2(1,-32,0,32), Position:U2(0,16,1,-46), BackgroundColor3:C3(15,16,20), Text:'', PlaceholderText:'Type here…', TextColor3:C3(235,235,240), PlaceholderColor3:C3(120,122,130), TextSize:14, TextXAlignment:EN('TextXAlignment','Left') }, children:[ { class:'UICorner', name:'UICorner', props:{ CornerRadius:UD(0,8) }, children:[] }, { class:'UIPadding', name:'UIPadding', props:{ PaddingLeft:UD(0,12) }, children:[] } ] }
+  ]}
+]});
+
+const assignIds=n=>{ n._id=++uid; (n.children||[]).forEach(assignIds); };
+const findById=id=>{ let f=null; (function w(n){ if(n._id===id) f=n; else (n.children||[]).forEach(w); })(tree); return f; };
+const findParent=(n,t,par=null)=>{ if(n===t) return par; for(const c of (n.children||[])){ const r=findParent(c,t,n); if(r) return r; } return null; };
+
+/* ---------- HISTORY ---------- */
+let undoStack=[], redoStack=[], pendingBefore=null;
+const cap=a=>{ while(a.length>60) a.shift(); };
+function beginEdit(){ if(!pendingBefore) pendingBefore=clone(tree); }
+function endEdit(){ if(pendingBefore){ undoStack.push(pendingBefore); cap(undoStack); redoStack=[]; pendingBefore=null; updateHist(); } }
+function pushUndo(){ endEdit(); undoStack.push(clone(tree)); cap(undoStack); redoStack=[]; updateHist(); }
+function undo(){ endEdit(); if(!undoStack.length) return; redoStack.push(clone(tree)); tree=undoStack.pop(); afterHistory(); }
+function redo(){ if(!redoStack.length) return; undoStack.push(clone(tree)); tree=redoStack.pop(); afterHistory(); }
+function afterHistory(){ selected=selectedId!=null?findById(selectedId):null; if(!selected) selectedId=null; renderAll(); updateHist(); }
+function updateHist(){ undoBtn.disabled=!(undoStack.length||pendingBefore); redoBtn.disabled=!redoStack.length; }
+
+/* ---------- PARSERS (Luau / rbxmx / JSON) ---------- */
+function parseLuau(src){
+  const constants={}, lines=src.split('\n');
+  for(let i=0;i<lines.length;i++){ const m=lines[i].match(/^\s*local\s+(\w+)\s*=\s*\{/); if(!m) continue; const tbl=m[1]; let depth=(lines[i].match(/\{/g)||[]).length-(lines[i].match(/\}/g)||[]).length, j=i+1;
+    while(j<lines.length&&depth>0){ const e=lines[j].match(/^\s*(\w+)\s*=\s*(.+?),?\s*$/); if(e){ const v=parseVal(e[2],{}); if(v!==undefined) constants[tbl+'.'+e[1]]=v; } depth+=(lines[j].match(/\{/g)||[]).length-(lines[j].match(/\}/g)||[]).length; j++; } }
+  const byVar={}, order=[], parentRef=new Map(), mk=cls=>{ const n={class:cls,name:cls,props:{},children:[]}; order.push(n); return n; };
+  for(let raw of lines){ let line=raw.replace(/\s+--(?![^"]*").*$/,'').trim(); if(!line) continue; let m;
+    if((m=line.match(/^Instance\.new\(\s*["'](\w+)["']\s*,\s*(\w+)\s*\)\s*\.(\w+)\s*=\s*(.+)$/))){ const n=mk(m[1]); parentRef.set(n,m[2]); const v=parseVal(m[4],constants); if(v!==undefined){ if(m[3]==='Name') n.name=v; else n.props[m[3]]=v; } continue; }
+    if((m=line.match(/^local\s+(\w+)\s*=\s*Instance\.new\(\s*["'](\w+)["']\s*(?:,\s*(\w+)\s*)?\)$/))||(m=line.match(/^(\w+)\s*=\s*Instance\.new\(\s*["'](\w+)["']\s*(?:,\s*(\w+)\s*)?\)$/))){ const n=mk(m[2]); byVar[m[1]]=n; if(m[3]) parentRef.set(n,m[3]); continue; }
+    if((m=line.match(/^(\w+)\.(\w+)\s*=\s*(.+)$/))){ const node=byVar[m[1]]; if(!node) continue; if(m[2]==='Parent'){ const pv=m[3].match(/^(\w+)/); parentRef.set(node,pv?pv[1]:null); } else { const v=parseVal(m[3],constants); if(v!==undefined){ if(m[2]==='Name') node.name=v; else node.props[m[2]]=v; } } continue; } }
+  if(!order.length) throw new Error('No Instance.new(...) statements found.');
+  const roots=[]; for(const n of order){ const pref=parentRef.get(n), par=pref?byVar[pref]:null; if(par&&par!==n) par.children.push(n); else roots.push(n); }
+  let root=roots.find(r=>r.class==='ScreenGui'); if(root) roots.forEach(r=>{ if(r!==root) root.children.push(r); }); else root={class:'ScreenGui',name:'ImportedGui',props:{},children:roots};
+  return { root, count:order.length };
+}
+function parseVal(expr,constants){ let e=expr.trim().replace(/,+$/,'').trim(); if(constants[e]!==undefined) return constants[e]; let m;
+  if((m=e.match(/^Color3\.fromRGB\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return C3(+m[1],+m[2],+m[3]);
+  if((m=e.match(/^Color3\.new\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return C3(Math.round(+m[1]*255),Math.round(+m[2]*255),Math.round(+m[3]*255));
+  if((m=e.match(/^UDim2\.new\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return U2(+m[1],+m[2],+m[3],+m[4]);
+  if((m=e.match(/^UDim2\.fromOffset\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return U2(0,+m[1],0,+m[2]);
+  if((m=e.match(/^UDim2\.fromScale\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return U2(+m[1],0,+m[2],0);
+  if((m=e.match(/^UDim\.new\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return UD(+m[1],+m[2]);
+  if((m=e.match(/^Vector2\.new\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/))) return V2(+m[1],+m[2]);
+  if((m=e.match(/^Enum\.(\w+)\.(\w+)/))) return EN(m[1],m[2]);
+  if((m=e.match(/^["'](.*)["']$/))) return m[1];
+  if(/^-?[\d.]+$/.test(e)) return +e; if(e==='true') return true; if(e==='false') return false; return undefined; }
+function parseRbxmx(src){ const doc=new DOMParser().parseFromString(src,'text/xml'); if(doc.querySelector('parsererror')) throw new Error('Invalid XML.'); const rootEl=doc.querySelector('roblox'); if(!rootEl) throw new Error('No <roblox> root.'); const top=[...rootEl.children].filter(c=>c.tagName==='Item'); if(!top.length) throw new Error('No <Item> found.'); let count=0;
+  const build=item=>{ count++; const node={class:item.getAttribute('class')||'Instance',name:item.getAttribute('class')||'Instance',props:{},children:[]}; const props=[...item.children].find(c=>c.tagName==='Properties'); if(props) for(const p of props.children){ const nm=p.getAttribute('name'); if(!nm) continue; const v=readXmlProp(p); if(v===undefined) continue; if(nm==='Name') node.name=v; else node.props[nm]=v; } for(const c of item.children) if(c.tagName==='Item') node.children.push(build(c)); return node; };
+  const built=top.map(build); let root=built.find(r=>r.class==='ScreenGui'); if(root) built.forEach(r=>{ if(r!==root) root.children.push(r); }); else root={class:'ScreenGui',name:'ImportedGui',props:{},children:built}; return { root, count }; }
+const gvx=(el,tag)=>{ const c=[...el.children].find(x=>x.tagName===tag); return c?parseFloat(c.textContent):0; };
+function readXmlProp(p){ const tag=p.tagName;
+  if(['string','Content','ProtectedString','BinaryString'].includes(tag)) return p.textContent;
+  if(tag==='bool') return p.textContent.trim()==='true';
+  if(['float','double','int','int64','number'].includes(tag)) return parseFloat(p.textContent);
+  if(tag==='UDim2') return U2(gvx(p,'XS'),gvx(p,'XO'),gvx(p,'YS'),gvx(p,'YO'));
+  if(tag==='UDim') return UD(gvx(p,'S'),gvx(p,'O'));
+  if(tag==='Vector2') return V2(gvx(p,'X'),gvx(p,'Y'));
+  if(tag==='Color3'||tag==='Color3uint8'){ const rEl=[...p.children].find(x=>x.tagName==='R'); if(rEl){ let r=gvx(p,'R'),g=gvx(p,'G'),b=gvx(p,'B'); if(r<=1&&g<=1&&b<=1){ r*=255;g*=255;b*=255; } return C3(Math.round(r),Math.round(g),Math.round(b)); } const n=parseInt(p.textContent)||0; return C3((n>>16)&255,(n>>8)&255,n&255); }
+  if(tag==='token') return parseInt(p.textContent)||0; return undefined; }
+function parseJSON(src){ const adapt=n=>({ class:n.Class||n.class||'Frame', name:n.Name||n.name||(n.Class||n.class), props:n.Properties||n.props||{}, children:(n.Children||n.children||[]).map(adapt) }); const root=adapt(JSON.parse(src)); let c=0; (function w(n){ c++; (n.children||[]).forEach(w); })(root); return { root, count:c }; }
+
+/* ---------- COLLAPSIBLE TREE ---------- */
+function renderTree(){ const host=document.getElementById('treeView'); host.innerHTML='';
+  const walk=(node,container)=>{ const row=document.createElement('div'); row.className='tree-node'+(isMod(node)?' tree-mod':'')+(selected&&selected._id===node._id?' sel':'');
+    const kids=node.children&&node.children.length; const chev=document.createElement('span'); chev.className='chev'+(kids?(node._closed?'':' open'):' empty'); chev.textContent='▶';
+    chev.onclick=e=>{ e.stopPropagation(); if(kids){ node._closed=!node._closed; renderTree(); } }; row.appendChild(chev);
+    const vis=(node.props?.Visible)!==false; const meta=document.createElement('span'); meta.style.cssText='display:flex;align-items:center;gap:5px;flex:1;overflow:hidden;'; meta.innerHTML=`<span class="dot"></span><span class="cls">${node.class}</span><span class="nm">${node.name||node.class}</span>`; row.appendChild(meta);
+    if(GUIOBJ(node.class)){ const eye=document.createElement('button'); eye.className='eye'+(vis?'':' off'); eye.textContent=vis?'👁':'🚫'; eye.title=vis?'Visible — hide':'Hidden — show'; eye.onclick=e=>{ e.stopPropagation(); pushUndo(); node.props=node.props||{}; if(vis) node.props.Visible=false; else delete node.props.Visible; renderAll(); }; row.appendChild(eye); }
+    row.onclick=e=>{ e.stopPropagation(); select(node); }; container.appendChild(row);
+    if(kids){ const box=document.createElement('div'); box.className='tree-children'+(node._closed?' collapsed':''); node.children.forEach(c=>walk(c,box)); container.appendChild(box); } };
+  walk(tree,host);
+}
+
+/* ---------- COMPREHENSIVE INSPECTOR ---------- */
+const numField=(val,on)=>{ const i=document.createElement('input'); i.type='number'; i.value=val; i.addEventListener('input',()=>{ beginEdit(); on(parseFloat(i.value)||0); }); i.addEventListener('change',endEdit); return i; };
+const txtField=(val,on)=>{ const i=document.createElement('input'); i.type='text'; i.value=val; i.addEventListener('input',()=>{ beginEdit(); on(i.value); }); i.addEventListener('change',endEdit); return i; };
+const boolField=(val,on)=>{ const i=document.createElement('input'); i.type='checkbox'; i.checked=!!val; i.addEventListener('change',()=>{ beginEdit(); on(i.checked); endEdit(); }); return i; };
+const colorField=(v,on)=>{ const i=document.createElement('input'); i.type='color'; i.value=rgbToHex(v.r,v.g,v.b); i.addEventListener('input',()=>{ beginEdit(); const [r,g,b]=hexToRgb(i.value); on(C3(r,g,b)); }); i.addEventListener('change',endEdit); return i; };
+function propRow(label,control,inline){ const d=document.createElement('div'); d.className='prop'+(inline?' inline':''); const l=document.createElement('label'); l.textContent=label; d.appendChild(l); d.appendChild(control); return d; }
+function multiField(v,keys,on){ const w=document.createElement('div'); w.className=keys.length>2?'quad':'duo'; keys.forEach(([k,lab])=>{ const c=document.createElement('div'); c.appendChild(numField(v[k],nv=>{ const nc={...v}; nc[k]=nv; on(nc); })); c.innerHTML+=`<div class="mini">${lab}</div>`; w.appendChild(c); }); return w; }
+
+function renderInspector(){ const host=document.getElementById('inspector'); host.innerHTML='';
+  if(!selected){ host.innerHTML='<div class="insp-empty">Select an element</div>'; return; }
+  const sch=schemaFor(selected.class), p=selected.props||(selected.props={});
+  const setP=(k,val)=>{ p[k]=val; redraw(); }; 
+  CAT_ORDER.forEach(cat=>{ if(!sch[cat]) return; const cd=document.createElement('div'); cd.className='insp-cat'; cd.textContent=cat; host.appendChild(cd);
+    Object.entries(sch[cat]).forEach(([key,[type,def]])=>{
+      if(key==='Name'){ host.appendChild(propRow('Name', txtField(selected.name||'', v=>{ selected.name=v; renderTree(); refreshExport(); }))); return; }
+      let v=key in p ? p[key] : clone(def);
+      if(type==='Color3') host.appendChild(propRow(key, colorField(v, nv=>setP(key,nv)), true));
+      else if(type==='UDim2') host.appendChild(propRow(key, multiField(v,[['xs','Xs'],['xo','Xo'],['ys','Ys'],['yo','Yo']], nv=>setP(key,nv))));
+      else if(type==='UDim') host.appendChild(propRow(key, multiField(v,[['s','Scale'],['o','Offset']], nv=>setP(key,nv))));
+      else if(type==='Vector2') host.appendChild(propRow(key, multiField(v,[['x','X'],['y','Y']], nv=>setP(key,nv))));
+      else if(type==='Enum') host.appendChild(propRow(key+' · '+v.enum, txtField(v.value, nv=>setP(key,{...v,value:nv}))));
+      else if(type==='bool') host.appendChild(propRow(key, boolField(v, nv=>{ if(key==='Visible'){ if(nv) delete p.Visible; else p.Visible=false; redraw(); renderTree(); } else setP(key,nv); }), true));
+      else if(type==='number') host.appendChild(propRow(key, numField(v, nv=>setP(key,nv))));
+      else host.appendChild(propRow(key, txtField(v, nv=>setP(key,nv))));
+    }); });
+}
+
+/* ---------- INTERACTIVE PREVIEW ---------- */
+const ax=(s,o)=>`calc(${s*100}% + ${o}px)`;
+function buildEl(node){ const p=node.props||{}; const hidden=p.Visible===false; if(hidden&&mode!=='edit') return null;
+  const modsArr=(node.children||[]).filter(isMod), kids=(node.children||[]).filter(c=>!isMod(c));
+  const el=document.createElement('div'); el.className='r-el'; if(BTNY.includes(node.class)) el.classList.add('is-button'); if(hidden) el.classList.add('ghost');
+  if(mode==='edit'&&selected&&selected._id===node._id) el.classList.add('selected-outline');
+  el.addEventListener('click',e=>{ if(mode==='edit'){ e.stopPropagation(); select(node); } });
+  const size=gp(node,'Size',U2(0,100,0,100)), pos=gp(node,'Position',U2(0,0,0,0));
+  el.style.width=ax(size.xs,size.xo); el.style.height=ax(size.ys,size.yo); el.style.left=ax(pos.xs,pos.xo); el.style.top=ax(pos.ys,pos.yo);
+  const anc=gp(node,'AnchorPoint',V2(0,0)), rot=gp(node,'Rotation',0);
+  let tf=`translate(${-anc.x*100}%, ${-anc.y*100}%)`; if(rot) tf+=` rotate(${rot}deg)`; el.style.transform=tf;
+  el.style.zIndex=gp(node,'ZIndex',1);
+  const bt=gp(node,'BackgroundTransparency',0), bg=gp(node,'BackgroundColor3',C3(255,255,255));
+  el.style.background = bt>=1 ? 'transparent' : `rgba(${bg.r},${bg.g},${bg.b},${1-bt})`;
+  const bsp=gp(node,'BorderSizePixel',0); if(bsp>0){ const bc=gp(node,'BorderColor3',C3(27,42,53)); el.style.border=`${bsp}px solid rgb(${bc.r},${bc.g},${bc.b})`; }
+  el.style.overflow = gp(node,'ClipsDescendants',false)||node.class==='ScrollingFrame' ? (node.class==='ScrollingFrame'?'auto':'hidden') : 'visible';
+  const corner=modsArr.find(m=>m.class==='UICorner'); if(corner) el.style.borderRadius=(gp(corner,'CornerRadius',UD(0,8)).o||0)+'px';
+  const stroke=modsArr.find(m=>m.class==='UIStroke'); if(stroke){ const c=gp(stroke,'Color',C3(0,0,0)), th=gp(stroke,'Thickness',1); el.style.boxShadow=`inset 0 0 0 ${th}px rgb(${c.r},${c.g},${c.b})`; }
+  const padM=modsArr.find(m=>m.class==='UIPadding'); if(padM){ const g=k=>(gp(padM,k,UD(0,0)).o||0)+'px'; el.style.paddingLeft=g('PaddingLeft'); el.style.paddingRight=g('PaddingRight'); el.style.paddingTop=g('PaddingTop'); el.style.paddingBottom=g('PaddingBottom'); }
+  const list=modsArr.find(m=>m.class==='UIListLayout'); if(list){ el.style.display='flex'; el.style.flexDirection=gp(list,'FillDirection',EN('FillDirection','Vertical')).value==='Horizontal'?'row':'column'; el.style.gap=(gp(list,'Padding',UD(0,0)).o||0)+'px'; const ha=gp(list,'HorizontalAlignment',EN('','Left')).value, va=gp(list,'VerticalAlignment',EN('','Top')).value; const mapH={Left:'flex-start',Center:'center',Right:'flex-end'}, mapV={Top:'flex-start',Center:'center',Bottom:'flex-end'}; el.style.alignItems=mapH[ha]||'flex-start'; el.style.justifyContent=mapV[va]||'flex-start'; }
+  if(TEXTY.includes(node.class)){
+    let txt=gp(node,'Text',''); if(txt===''&&node.class!=='TextBox') txt=node.name; const col=gp(node,'TextColor3',C3(27,42,53));
+    if(!list){ el.style.display='flex'; } el.style.alignItems=el.style.alignItems||'center'; if(!list) el.style.alignItems=gp(node,'TextYAlignment',EN('','Center')).value==='Top'?'flex-start':gp(node,'TextYAlignment',EN('','Center')).value==='Bottom'?'flex-end':'center';
+    const xa=gp(node,'TextXAlignment',EN('','Center')).value; el.style.justifyContent=xa==='Left'?'flex-start':xa==='Right'?'flex-end':'center';
+    el.style.fontSize=(gp(node,'TextSize',14))+'px'; el.style.fontWeight=(gp(node,'Font',EN('','')).value||'').includes('Bold')?'700':'500';
+    el.style.color=`rgba(${col.r},${col.g},${col.b},${1-gp(node,'TextTransparency',0)})`;
+    el.style.whiteSpace=gp(node,'TextWrapped',false)?'normal':'nowrap';
+    if(gp(node,'TextScaled',false)) el.dataset.scaled='1';
+    if(node.class==='TextBox'&&mode!=='edit'){ const inp=document.createElement('input'); inp.className='r-input'; inp.value=txt; inp.placeholder=gp(node,'PlaceholderText',''); inp.oninput=e=>{ node.props.Text=e.target.value; }; el.appendChild(inp); }
+    else { const span=document.createElement('span'); span.style.width=gp(node,'TextWrapped',false)?'100%':'auto'; if(gp(node,'RichText',false)) span.innerHTML=txt; else span.textContent=txt; el.appendChild(span); }
+  } else if(IMGY.includes(node.class)){ el.style.display='flex'; el.style.alignItems='center'; el.style.justifyContent='center'; const it=gp(node,'ImageTransparency',0); if(it<1&&bt>=1){ el.style.background='repeating-conic-gradient(#4b4d57 0% 25%, #3a3c45 0% 50%) 50% / 16px 16px'; } const tag=document.createElement('span'); tag.textContent='🖼'; tag.style.cssText='font-size:16px;opacity:.6;'; el.appendChild(tag); }
+  kids.forEach(k=>{ const ce=buildEl(k); if(!ce) return; if(!list) ce.style.position='absolute'; else ce.style.position='static'; el.appendChild(ce); });
+  return el;
+}
+function renderPreview(){ const s=document.getElementById('screen'); s.className='screen'+(mode==='preview'?' mode-preview':''); s.innerHTML='';
+  if(mode==='ai') return; s.onclick=()=>{ if(mode==='edit') select(null); };
+  (tree.children||[]).forEach(c=>{ const e=buildEl(c); if(e){ e.style.position='absolute'; s.appendChild(e); } });
+  s.querySelectorAll('[data-scaled]').forEach(el=>{ el.style.fontSize=Math.max(8,Math.floor(el.clientHeight*0.62))+'px'; });
+}
+
+/* ---------- EXPORTS ---------- */
+const luauVal=v=>{ if(v&&v.t==='Color3') return `Color3.fromRGB(${v.r}, ${v.g}, ${v.b})`; if(v&&v.t==='UDim2') return `UDim2.new(${v.xs}, ${v.xo}, ${v.ys}, ${v.yo})`; if(v&&v.t==='UDim') return `UDim.new(${v.s}, ${v.o})`; if(v&&v.t==='Vector2') return `Vector2.new(${v.x}, ${v.y})`; if(v&&v.t==='Enum') return `Enum.${v.enum}.${v.value}`; if(typeof v==='string') return `"${v.replace(/"/g,'\\"')}"`; return String(v); };
+function stripDefaults(node){ const sch=flatSchema(node.class), props={}; Object.keys(node.props||{}).forEach(k=>{ const def=sch[k]; if(def!==undefined&&deepEq(node.props[k],def)) return; props[k]=node.props[k]; }); return { Class:node.class, Name:node.name, Properties:props, Children:(node.children||[]).map(stripDefaults) }; }
+function exportSeq(){ const lines=[]; let n=0; const emit=(node,pv)=>{ const vn='v'+(++n); lines.push(`local ${vn} = Instance.new("${node.class}")`); if(node.name) lines.push(`${vn}.Name = "${node.name}"`); Object.keys(node.props||{}).forEach(k=>lines.push(`${vn}.${k} = ${luauVal(node.props[k])}`)); if(pv) lines.push(`${vn}.Parent = ${pv}`); lines.push(''); (node.children||[]).forEach(c=>emit(c,vn)); return vn; }; const rv=emit(tree,null); lines.push(`${rv}.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")`); return lines.join('\n'); }
+function exportDict(node,depth){ const ind='  '.repeat(depth), n=stripDefaults(node); let str=`{\n${ind}Class = "${n.Class}",\n${ind}Name = "${n.Name}",\n${ind}Properties = {`; const keys=Object.keys(n.Properties); if(keys.length){ str+='\n'; keys.forEach(k=>{ str+=`${ind}  ${k} = ${luauVal(n.Properties[k])},\n`; }); str+=ind+'}'; } else str+='}'; if(n.Children.length){ str+=`,\n${ind}Children = {\n`; n.Children.forEach((c,i)=>{ str+=ind+'  '+dictNode(node.children[i],depth+2)+',\n'; }); str+=ind+'}'; } return str+`\n${'  '.repeat(depth-1)}}`; }
+function dictNode(node,depth){ return exportDict(node,depth); }
+function refreshExport(){ const out=document.getElementById('exportOut'); if(exportMode==='luau') out.textContent=exportSeq(); else if(exportMode==='dict') out.textContent='local UI = '+exportDict(tree,1); else out.textContent=JSON.stringify(stripDefaults(tree),null,2); }
+
+/* ---------- STATE MANAGER ---------- */
+function renderStates(){ const list=document.getElementById('stateList'); list.innerHTML=''; const names=Object.keys(customStates); document.getElementById('stateHint').style.display=names.length?'none':'block';
+  names.forEach(name=>{ const pill=document.createElement('div'); pill.className='state-pill'; pill.textContent=name; const x=document.createElement('div'); x.className='del-state'; x.textContent='✕'; x.onclick=e=>{ e.stopPropagation(); delete customStates[name]; renderStates(); }; pill.appendChild(x); pill.onclick=()=>{ pushUndo(); tree=clone(customStates[name]); uid=0; assignIds(tree); selected=selectedId!=null?findById(selectedId):null; if(mode==='ai') setMode('preview'); renderAll(); }; list.appendChild(pill); }); }
+document.getElementById('addStateBtn').onclick=()=>{ const name=prompt("Name this state (e.g. 'Dropdown Open'):"); if(name){ customStates[name]=clone(tree); renderStates(); } };
+
+/* ---------- CONTROLLERS ---------- */
+function renderAll(){ renderTree(); renderInspector(); renderPreview(); refreshExport(); }
+function select(n){ selected=n; selectedId=n?n._id:null; renderAll(); }
+function redraw(){ if(mode!=='ai') renderPreview(); refreshExport(); }
+function loadTree(root,record){ if(record) pushUndo(); tree=root; uid=0; assignIds(tree); selected=null; selectedId=null; if(mode==='ai') setMode('edit'); renderAll(); updateHist(); }
+function duplicateSelected(){ if(!selected||selected===tree) return; const par=findParent(tree,selected); if(!par) return; pushUndo(); const copy=clone(selected); (function reid(n){ n._id=++uid; (n.children||[]).forEach(reid); })(copy); const idx=par.children.indexOf(selected); par.children.splice(idx+1,0,copy); select(copy); }
+
+document.querySelectorAll('[data-add]').forEach(btn=>btn.onclick=()=>{ const cls=btn.dataset.add; pushUndo(); const base={ Size:U2(0,120,0,40), Position:U2(0,12,0,12), BackgroundColor3:C3(48,49,60) }; if(TEXTY.includes(cls)){ base.Text=cls==='TextBox'?'':cls; base.TextColor3=C3(235,235,240); base.TextSize=14; if(cls==='TextBox') base.PlaceholderText='…'; } const node={class:cls,name:cls,props:base,children:[],_id:++uid}; const target=(selected&&!isMod(selected))?selected:tree; (target.children=target.children||[]).push(node); select(node); });
+document.getElementById('dupBtn').onclick=duplicateSelected;
+document.getElementById('delBtn').onclick=()=>{ if(!selected||selected===tree) return; pushUndo(); const par=findParent(tree,selected); if(par){ par.children=par.children.filter(c=>c!==selected); select(null); } };
+document.getElementById('resetBtn').onclick=()=>{ customStates={}; renderStates(); loadTree(seedTree(),true); };
+const undoBtn=document.getElementById('undoBtn'), redoBtn=document.getElementById('redoBtn'); undoBtn.onclick=undo; redoBtn.onclick=redo;
+function setMode(m){ mode=m; document.getElementById('modeEdit').classList.toggle('on',m==='edit'); document.getElementById('modePreview').classList.toggle('on',m==='preview'); document.getElementById('modeAI').classList.toggle('on',m==='ai');
+  const note=document.getElementById('prevNote'); if(m==='edit') note.innerHTML='<b>Edit</b> — click to select; hidden elements show ghosted. Use 👁 in the Explorer to reveal/hide any frame.'; else if(m==='preview') note.innerHTML='<b>Preview</b> — what the player sees: hidden frames hidden, TextBoxes typable, buttons hover/press. Reveal a hidden state via 👁 then view it here.'; else note.innerHTML='<b>AI Live</b> — Claude generates a fully interactive mock of this UI (like a hand-built prototype). Rendered in a sandboxed frame; it won\'t change your tree.';
+  if(m!=='ai') renderPreview(); }
+document.getElementById('modeEdit').onclick=()=>setMode('edit');
+document.getElementById('modePreview').onclick=()=>setMode('preview');
+const BACKDROPS=[['sky','Day Sky'],['sunset','Sunset'],['night','Night'],['light','Light'],['dark','Dark'],['mid','Mid Gray'],['grid','Grid']];
+const bgSelect=document.getElementById('bgSelect');
+BACKDROPS.forEach(([v,l])=>{ const o=document.createElement('option'); o.value=v; o.textContent=l; bgSelect.appendChild(o); });
+const setBackdrop=v=>{ document.getElementById('screen').dataset.bg=v; localStorage.setItem('rbxBg',v); };
+bgSelect.value=localStorage.getItem('rbxBg')||'grid';
+setBackdrop(bgSelect.value);
+bgSelect.onchange=()=>setBackdrop(bgSelect.value);
+['luau','dict','json'].forEach(m=>{ const id='tab'+m[0].toUpperCase()+m.slice(1); document.getElementById(id).onclick=()=>{ exportMode=m; document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('on')); document.getElementById(id).classList.add('on'); refreshExport(); }; });
+document.getElementById('copyBtn').onclick=()=>{ navigator.clipboard?.writeText(document.getElementById('exportOut').textContent).then(()=>{ const b=document.getElementById('copyBtn'), o=b.textContent; b.textContent='Copied!'; setTimeout(()=>b.textContent=o,1100); }).catch(()=>{}); };
+document.addEventListener('keydown',e=>{ const inField=/INPUT|TEXTAREA/.test(document.activeElement?.tagName); if((e.ctrlKey||e.metaKey)&&!inField){ const k=e.key.toLowerCase(); if(k==='z'&&!e.shiftKey){ e.preventDefault(); undo(); } else if(k==='y'||(k==='z'&&e.shiftKey)){ e.preventDefault(); redo(); } else if(k==='d'&&selected){ e.preventDefault(); duplicateSelected(); } } });
+
+/* ---------- AI LIVE (via local proxy server, server.js) ---------- */
+document.getElementById('modeAI').onclick=async()=>{
+  setMode('ai'); const screen=document.getElementById('screen'); screen.className='screen';
+  screen.innerHTML='<div class="ai-splash"><div class="spinner"></div><div>Claude is building an interactive prototype of your UI…</div></div>';
+  const uiData=stripDefaults(tree);
+  try{
+    const res=await fetch('/api/generate-preview',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(uiData) });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.detail || data.error || ('Server '+res.status));
+    let html=(data.html||'').trim();
+    if(!/<\/html>|<\/body>|<script/i.test(html)) html+='\n<!-- note: output may be truncated -->';
+    const iframe=document.createElement('iframe'); iframe.setAttribute('sandbox','allow-scripts allow-forms');
+    screen.innerHTML=''; screen.appendChild(iframe); iframe.srcdoc=html;
+    document.getElementById('prevNote').innerHTML='<b>AI Live</b> — interactive prototype ready. Type, click, open menus. Switch to Edit/Preview to keep editing your tree.';
+  }catch(err){ screen.innerHTML='<div class="ai-splash" style="color:#e08b8b;">Could not reach the AI proxy server.<br><span style="font-size:11px;color:var(--txt-faint)">Make sure `node server.js` is running and ANTHROPIC_API_KEY is set. '+(err.message||'')+'</span></div>'; }
+};
+
+/* ---------- IMPORT MODAL ---------- */
+const modal=document.getElementById('importModal'), ta=document.getElementById('importText'), badge=document.getElementById('fmtBadge'), fileInp=document.getElementById('fileInp'), status=document.getElementById('importStatus');
+const detectFmt=t=>{ if(!t) return 'none'; if(t.startsWith('<')) return 'xml'; if(t.startsWith('{')||t.startsWith('[')) return 'json'; return 'luau'; };
+function updBadge(){ const f=detectFmt(ta.value.trim()); badge.textContent = f==='xml'?'Roblox XML':f==='json'?'JSON dump':f==='luau'?'Luau script':'Detecting…'; }
+document.getElementById('openImport').onclick=()=>{ modal.classList.add('show'); ta.value=''; status.textContent=''; updBadge(); };
+document.getElementById('closeImport').onclick=()=>modal.classList.remove('show');
+modal.onclick=e=>{ if(e.target===modal) modal.classList.remove('show'); };
+document.getElementById('browseFileBtn').onclick=()=>fileInp.click();
+fileInp.onchange=e=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ ta.value=ev.target.result; updBadge(); }; r.readAsText(f); };
+ta.oninput=()=>{ updBadge(); status.textContent=''; };
+document.getElementById('loadBtn').onclick=()=>{ const t=ta.value.trim(), fmt=detectFmt(t); if(fmt==='none'){ status.className='import-status err'; status.textContent='Browse a file or paste code first.'; return; }
+  try{ const res=fmt==='xml'?parseRbxmx(t):fmt==='json'?parseJSON(t):parseLuau(t); loadTree(res.root,true); status.className='import-status ok'; status.textContent=`✓ Loaded ${res.count} instance${res.count===1?'':'s'}.`; setTimeout(()=>modal.classList.remove('show'),600); }
+  catch(err){ status.className='import-status err'; status.textContent='✕ '+err.message; } };
+
+/* ---------- INIT ---------- */
+tree=seedTree(); uid=0; assignIds(tree); setMode('edit'); renderStates(); renderAll(); updateHist();
+</script>
+</body></html>
